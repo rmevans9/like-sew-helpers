@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         RainPOS Invoice Class Date
+// @name         RainPOS Invoice and Transaction Modal Class Date
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Find a scope on an element and log a specific value (and updates) to the console.
+// @description  This script adds a date badge to the items row in the transaction and invoice modals since RainPOS does not show the dates currently.
 // @match        https://*.rainadmin.com/*
 // @run-at       document-idle
 // @grant        none
