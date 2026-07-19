@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LikeSew Transaction Presence Client
 // @namespace    https://creativepursuitsquilting.com/
-// @version      0.3.1
+// @version      0.3.2
 // @description  Shows when a suspended LikeSew transaction may be open on another Creative Pursuits register.
 // @match        https://*.rainadmin.com/pos-app/*
 // @run-at       document-start
@@ -500,7 +500,31 @@
         ? "Enter a token to replace the saved token"
         : "Paste device token";
       tokenInput.style.cssText =
-        "width:100%;padding:8px;box-sizing:border-box;border:1px solid #bbb;border-radius:4px;";
+        "width:100%;padding:8px 56px 8px 8px;box-sizing:border-box;border:1px solid #bbb;border-radius:4px;";
+
+      const tokenInputWrapper = element("div", {
+        style: "position:relative;",
+      });
+      const toggleTokenVisibility = element("button", {
+        text: "Show",
+        style:
+          "position:absolute;right:2px;top:2px;bottom:2px;padding:0 9px;border:0;border-left:1px solid #ddd;background:#f7f7f7;color:#286090;font-size:12px;font-weight:600;cursor:pointer;",
+      });
+      toggleTokenVisibility.type = "button";
+      toggleTokenVisibility.setAttribute("aria-label", "Show device token");
+      toggleTokenVisibility.setAttribute("aria-pressed", "false");
+      toggleTokenVisibility.addEventListener("click", () => {
+        const showToken = tokenInput.type === "password";
+        tokenInput.type = showToken ? "text" : "password";
+        toggleTokenVisibility.textContent = showToken ? "Hide" : "Show";
+        toggleTokenVisibility.setAttribute(
+          "aria-label",
+          `${showToken ? "Hide" : "Show"} device token`
+        );
+        toggleTokenVisibility.setAttribute("aria-pressed", String(showToken));
+        tokenInput.focus();
+      });
+      tokenInputWrapper.append(tokenInput, toggleTokenVisibility);
   
       const currentDevice = existingConfig
         ? element("div", {
@@ -588,7 +612,7 @@
       dialog.append(
         headingRow,
         explanation,
-        inputRow("Device token", tokenInput)
+        inputRow("Device token", tokenInputWrapper)
       );
       if (currentDevice) dialog.append(currentDevice);
       dialog.append(status, actions);
