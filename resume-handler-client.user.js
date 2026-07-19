@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name         LikeSew Transaction Presence Client
 // @namespace    https://creativepursuitsquilting.com/
-// @version      0.3.0
+// @version      0.3.1
 // @description  Shows when a suspended LikeSew transaction may be open on another Creative Pursuits register.
 // @match        https://*.rainadmin.com/pos-app/*
 // @run-at       document-start
+// @inject-into  page
+// @weight       999
+// @noframes
 // @grant        none
 // ==/UserScript==
 
