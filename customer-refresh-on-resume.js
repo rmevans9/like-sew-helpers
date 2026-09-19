@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RainPOS - Auto Refresh Customer on Resume Transaction
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Automatically clears and re-selects customer when resuming a transaction to fix invoice loading issue
 // @author       Your Name
 // @match        https://*.rainadmin.com/pos-app/*
@@ -31,6 +31,22 @@
 
         // Clean up the name (remove extra whitespace/newlines)
         return nameSpan.textContent.trim().replace(/\s+/g, ' ');
+    }
+
+    /**
+     * Formats a customer name for LikeSew's search.
+     * Three-part names need an underscore between the first two parts.
+     * @param {string} customerName - The customer's full name
+     * @returns {string} The name to enter in the customer search
+     */
+    function formatCustomerSearchName(customerName) {
+        const spaceCount = (customerName.match(/ /g) || []).length;
+
+        if (spaceCount === 2) {
+            return customerName.replace(' ', '_');
+        }
+
+        return customerName;
     }
 
     /**
@@ -127,6 +143,8 @@
      * @returns {Promise<boolean>} True if customer was selected, false otherwise
      */
     async function searchAndSelectCustomer(customerName) {
+        const searchName = formatCustomerSearchName(customerName);
+
         // Wait for the search input to appear
         const searchInput = await waitForElement('#customerSearchTill', 2000);
         if (!searchInput) {
@@ -134,13 +152,13 @@
             return false;
         }
 
-        console.log(`[Customer Refresh] Searching for customer: ${customerName}`);
+        console.log(`[Customer Refresh] Searching for customer: ${searchName}`);
 
         // Focus on the input
         searchInput.focus();
 
         // Set the value and trigger Angular's digest cycle
-        searchInput.value = customerName;
+        searchInput.value = searchName;
 
         // Trigger multiple events to ensure Angular picks it up
         const inputEvent = new Event('input', { bubbles: true, cancelable: true });
@@ -153,7 +171,7 @@
         try {
             const scope = angular.element(searchInput).scope();
             if (scope) {
-                scope.customerSearch = customerName;
+                scope.customerSearch = searchName;
                 scope.$apply();
             }
         } catch (e) {
