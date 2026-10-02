@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LikeSew POS Product Image Zoom
 // @namespace    https://creativepursuitsquilting.com/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Opens product images at a larger size when clicked in the LikeSew POS cart.
 // @match        https://*.rainadmin.com/pos-app/*
 // @run-at       document-idle
@@ -12,7 +12,7 @@
 (function () {
     "use strict";
 
-    const PRODUCT_IMAGE_SELECTOR = 'img[data-cy="till-line-image"]';
+    const PRODUCT_IMAGE_SELECTOR = '[data-cy="tillTable"] img.tillProductImage';
     const OVERLAY_ID = "likesew-product-image-zoom";
     const STYLE_ID = "likesew-product-image-zoom-styles";
 
@@ -27,15 +27,18 @@
     }
 
     function getProductName(image) {
-        const row = image.closest('[data-cy="till-line"]');
+        const row = image.closest('[data-cy="till-line"], [data-cy="regLineItem"]');
         if (!row) return "Product image";
 
-        const names = row.querySelectorAll('[data-cy="till-line-name"]');
+        const names = row.querySelectorAll(
+            '[data-cy="till-line-name"], .tillRowLeft > strong > span'
+        );
         const visibleName = Array.from(names).find(
             (name) => name.getClientRects().length > 0 && name.textContent.trim()
         );
 
-        return visibleName?.textContent.trim() || "Product image";
+        const fallbackName = row.querySelector(".tillRowLeft > strong")?.textContent.trim();
+        return visibleName?.textContent.trim() || fallbackName || "Product image";
     }
 
     function installStyles() {
@@ -81,9 +84,11 @@ ${PRODUCT_IMAGE_SELECTOR}:focus-visible {
     background: #fff;
     border-radius: 4px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    height: auto;
     max-height: calc(100vh - 110px);
     max-width: calc(100vw - 48px);
     object-fit: contain;
+    width: auto;
 }
 
 #${OVERLAY_ID} .likesew-image-zoom-caption {
@@ -168,6 +173,19 @@ ${PRODUCT_IMAGE_SELECTOR}:focus-visible {
         const thumbnailUrl = image.currentSrc || image.src;
 
         largeImage.alt = productName;
+        largeImage.style.width = "auto";
+        largeImage.style.height = "auto";
+        largeImage.onload = () => {
+            const maxWidth = Math.min(600, window.innerWidth - 48);
+            const maxHeight = window.innerHeight - 110;
+            const scale = Math.min(
+                maxWidth / largeImage.naturalWidth,
+                maxHeight / largeImage.naturalHeight
+            );
+
+            largeImage.style.width = `${Math.round(largeImage.naturalWidth * scale)}px`;
+            largeImage.style.height = `${Math.round(largeImage.naturalHeight * scale)}px`;
+        };
         largeImage.onerror = () => {
             if (largeImage.src !== thumbnailUrl) largeImage.src = thumbnailUrl;
         };
